@@ -1,69 +1,54 @@
 import React, { Component } from 'react';
 import {Link} from 'react-router-dom';
-import InfiniteScroll from 'react-infinite-scroller';
 
 class StoryList extends Component {
     constructor() {
         super();
         this.state = {stories:[],
                       hasMoreItems:true,
-                      nextHref: null};
+                      nextOffset: null};
     }
 
     loadItems(page) {
       var self = this;
-
       var url = 'api/stories'
-      if(this.state.nextHref) {
-        url = this.state.nextHref;
+      if(this.state.nextOffset) {
+        url = url + this.state.nextOffset
       }
-
       fetch(url)
       .then(response => response.json())
       .then(data => {
         var stories = self.state.stories
-        this.setState({stories:data})
+        this.setState({nextOffset: data.nextOffset,
+                      hasMoreItems: data.hasMoreItems})
+
       })
-
-
+      .catch(error => console.log('error', error));
     }
 
 componentDidMount() {
     fetch('api/stories')
     .then(response => response.json())
     .then(data => {
-        this.setState({stories:data});
+        this.setState({stories:data.stories});
     })
     .catch(error => console.log('error', error));
 }
 
 render() {
-  const loader = <div className="loader">Loading...</div>;
-
-  var items = [];
-
-  this.state.stories.map((story,i)) => {
-    items.push(
-      <div key={i}>
-        <p><a href={story.url}>{story.title}</a></p>
-      </div>
-    )
-  }
-
-
     return (
-      <InfiniteScroll
-          pageStart={0}
-          loadMore={this.loadItems.bind(this)}
-          hasMore={this.state.hasMoreItems}
-          loader={loader}>
-
-          <div className="tracks">
-              {items}
-          </div>
-      </InfiniteScroll>
+      <div>
+        {this.state.stories.map((story) => {
+          return(
+            <div key={story.id}>
+              <p><a target={story.url} href={story.url}>{story.title}</a></p>
+              <hr/>
+            </div>
+          )
+        })}
+        <Link to="/stories/new" className="btn btn-outline-primary">Create Story</Link> 
+      </div>
     );
-    
   }
 }
 
