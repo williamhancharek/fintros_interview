@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Home from './Home';
 import StoryList from './StoryList';
 import StoryAdd from './StoryAdd';
-// import StoryInfo from './StoryInfo';
+import StoryInfo from './StoryInfo';
 import {HashRouter as Router, Route, NavLink, Switch} from 'react-router-dom'
 
 class App extends Component {

@@ -1,9 +1,10 @@
-import React, { Component } from 'react';
+import React, { Component, useState } from 'react';
 import {Link} from 'react-router-dom';
+import InfiniteScroll from 'react-infinite-scroller';
 
 class StoryList extends Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {stories:[],
                       hasMoreItems:true,
                       nextOffset: null};
@@ -11,43 +12,47 @@ class StoryList extends Component {
 
     loadItems(page) {
       var self = this;
-      var url = 'api/stories'
-      if(this.state.nextOffset) {
-        url = url + this.state.nextOffset
-      }
+      this.state.nextOffset = page*30
+      var url = 'api/stories' + '?offset=' + this.state.nextOffset
+
       fetch(url)
       .then(response => response.json())
       .then(data => {
         var stories = self.state.stories
-        this.setState({nextOffset: data.nextOffset,
-                      hasMoreItems: data.hasMoreItems})
-
+        data.stories.map((story) => {
+          stories.push(story);
+        });
+        this.setState({hasMoreItems: data.hasMoreItems});
       })
-      .catch(error => console.log('error', error));
     }
 
-componentDidMount() {
-    fetch('api/stories')
-    .then(response => response.json())
-    .then(data => {
-        this.setState({stories:data.stories});
-    })
-    .catch(error => console.log('error', error));
-}
-
-render() {
+    render() {
+      const loader = <div className="loader" key="unique">Loading...</div>;
+      var items = [];
+      
+      this.state.stories.map((story,i) => {
+        items.push(
+        <div key={i}>
+          <p><a target={story.url} href={story.url}>{story.title}</a></p>
+        </div>
+      );
+    });
+    
     return (
-      <div>
-        {this.state.stories.map((story) => {
-          return(
-            <div key={story.id}>
-              <p><a target={story.url} href={story.url}>{story.title}</a></p>
-              <hr/>
-            </div>
-          )
-        })}
-        <Link to="/stories/new" className="btn btn-outline-primary">Create Story</Link> 
+      <div style={{overflow:"auto"}}>
+
+        <InfiniteScroll
+          pageStart={0}
+          loadMore={this.loadItems.bind(this)}
+          hasMore={this.state.hasMoreItems}
+          loader={loader}>
+
+          <div className="stories">
+            {items}
+          </div>
+        </InfiniteScroll>
       </div>
+
     );
   }
 }
